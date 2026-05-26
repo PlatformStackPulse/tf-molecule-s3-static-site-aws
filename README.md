@@ -1,264 +1,171 @@
-# Terraform Module Template
+# tf-molecule-s3-static-site-aws
 
-<!-- Badges: Update REPO_OWNER/REPO_NAME after creating from template -->
-[![CI](https://github.com/PlatformStackPulse/terraform-atom-molecule-module-template/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
-[![Release](https://github.com/PlatformStackPulse/terraform-atom-molecule-module-template/actions/workflows/auto-release.yml/badge.svg)](../../actions/workflows/auto-release.yml)
-[![CodeQL](https://github.com/PlatformStackPulse/terraform-atom-molecule-module-template/actions/workflows/codeql.yml/badge.svg)](../../actions/workflows/codeql.yml)
-[![Changelog](https://github.com/PlatformStackPulse/terraform-atom-molecule-module-template/actions/workflows/changelog.yml/badge.svg)](../../actions/workflows/changelog.yml)
-![Latest Release](https://img.shields.io/github/v/release/PlatformStackPulse/terraform-atom-molecule-module-template?label=latest%20release&sort=semver)
-![Terraform](https://img.shields.io/badge/terraform-%3E%3D1.6.0-blue?logo=terraform)
-![License](https://img.shields.io/github/license/PlatformStackPulse/terraform-atom-molecule-module-template)
+[![CI](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/ci.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/ci.yml)
+[![Release](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/auto-release.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/auto-release.yml)
+[![CodeQL](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/codeql.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/codeql.yml)
+[![Changelog](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/changelog.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/actions/workflows/changelog.yml)
+[![Latest Release](https://img.shields.io/github/v/release/PlatformStackPulse/tf-molecule-s3-static-site-aws?sort=semver)](https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws/releases)
+![Terraform](https://img.shields.io/badge/terraform-%3E%3D1.6.0-blueviolet?logo=terraform)
+![License](https://img.shields.io/github/license/PlatformStackPulse/tf-molecule-s3-static-site-aws)
 
-A production-ready template for creating Terraform modules following the **one module per repository** best practice, with built-in CI/CD, security scanning, testing, documentation generation, and publishing to public registries.
+---
+
+## Purpose
+
+An S3 static website hosting molecule that composes multiple atoms to deliver a fully-configured static site bucket. Provides website configuration, CORS rules, encryption, public access block, bucket policy (for CloudFront OAC or public read), and optional lifecycle/notification support — all in a single module call.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  tf-molecule-s3-static-site-aws                                             │
+│                                                                             │
+│  ┌──────────────────┐                                                       │
+│  │ tf-atom-s3-      │──────────────────────────────────────────┐            │
+│  │ bucket-aws       │                                          │            │
+│  │ (core bucket)    │                                          │            │
+│  └────────┬─────────┘                                          │            │
+│           │ bucket_id                                          │            │
+│           ├─────────────┬──────────────┬───────────────┬───────┤            │
+│           ▼             ▼              ▼               ▼       │            │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────────┐    │
+│  │ public-      │ │ encryption   │ │ website-     │ │ cors-          │    │
+│  │ access-block │ │ (AES256)     │ │ configuration│ │ configuration  │    │
+│  │ (all blocked)│ │              │ │ (index.html) │ │ (web origins)  │    │
+│  └──────────────┘ └──────────────┘ └──────────────┘ └────────────────┘    │
+│           │                                                                 │
+│           ├─────────────┬──────────────────────┐                            │
+│           ▼             ▼                      ▼                            │
+│  ┌──────────────┐ ┌──────────────────┐ ┌──────────────────┐               │
+│  │ policy       │ │ lifecycle        │ │ notification     │               │
+│  │ (CloudFront/ │ │ (optional)       │ │ (optional)       │               │
+│  │  public)     │ │                  │ │                  │               │
+│  └──────────────┘ └──────────────────┘ └──────────────────┘               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Scope
+
+| In Scope | Out of Scope |
+|----------|--------------|
+| Bucket creation with tf-label naming | CloudFront distribution (→ `tf-molecule-s3-web-hosting-aws`) |
+| Public access block (all 4 controls) | SSL certificates / ACM |
+| Server-side encryption (AES256 default) | Route53 DNS records |
+| Website configuration (index/error docs) | Object versioning (→ `tf-molecule-s3-secure-bucket-aws`) |
+| CORS rules for web origins | Access logging (→ `tf-molecule-s3-secure-bucket-aws`) |
+| Bucket policy (CloudFront OAC / public read) | WAF integration |
+| Lifecycle rules (optional deploy cleanup) | Replication |
+| Event notifications (optional cache invalidation) | Object lock |
 
 ## Features
 
-- **One Module Per Repo** — Module lives at the root; no nested `modules/` directory
-- **Registry Publishing** — Auto-publish to Terraform Registry, Artifactory, or GitLab on release
-- **Native Terraform Testing** — `terraform test` with mock providers (no external tools)
-- **Security Scanning** — Trivy IaC scanning for HIGH/CRITICAL vulnerabilities
-- **Linting** — TFLint with AWS ruleset (preset "all")
-- **Auto Documentation** — terraform-docs generates README sections on every commit
-- **GitHub Actions CI/CD** — Workflows for the full module lifecycle
-- **Auto Release** — CI passes on main → auto-tag → GitHub Release created
-- **Pre-Commit Hooks** — Format, validate, lint, docs, and security on every commit
-- **Conventional Commits** — Enforced commit message format
-- **Semantic Versioning** — Automated version management and releases
-- **DevContainer** — VS Code remote development ready
-
-## CI Pipeline
-
-When a PR is merged to `main`, all CI checks run automatically. On success, a release is created:
-
-```
-PR merged → CI runs → All pass → Auto-tag (semver) → GitHub Release
-```
-
-| Check | Description | Status |
-|-------|-------------|--------|
-| Format | `terraform fmt -check -recursive` | Must pass |
-| Validate | `terraform validate` on module + examples | Must pass |
-| Lint | TFLint with AWS ruleset (preset "all") | Must pass |
-| Test | `terraform test` with mock providers | Must pass |
-| Security | Trivy IaC scan (HIGH/CRITICAL) | Must pass |
-| Docs | terraform-docs freshness check | Must pass |
-| Commit Lint | Conventional commit format (PR only) | Must pass |
-
-## Quick Start
-
-### Create a New Module
-
-```bash
-# Create repo from template (name MUST follow: terraform-<PROVIDER>-<NAME>)
-gh repo create PlatformStackPulse/terraform-aws-my-module --template PlatformStackPulse/Terraform-module-base-template --public
-
-# Clone
-git clone git@github.com:PlatformStackPulse/terraform-aws-my-module.git
-cd terraform-aws-my-module
-
-# Install tools and hooks
-make dev-setup
-make hooks
-
-# Run all checks
-make all
-```
-
-### Customise the Template
-
-1. Replace the example S3 resources in `main.tf` with your actual resources
-2. Update `variables.tf`, `outputs.tf`, and `versions.tf`
-3. Write tests in `tests/unit/main_test.tftest.hcl`
-4. Update `examples/complete/` with real usage
-5. Update `.github/CODEOWNERS`
-6. Update this `README.md`
-
-See [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md) for detailed instructions.
+- **Static site ready** — website configuration with index/error document support
+- **CORS configured** — browser-compatible cross-origin rules for web frontends
+- **Composed from atoms** — each concern is a separate, tested module
+- **Optional lifecycle** — clean up old deploy artifacts automatically
+- **Optional notifications** — trigger Lambda for cache invalidation or deploy hooks
+- **CloudFront compatible** — policy supports OAC-based access or public read
+- **Encryption at rest** — AES256 default (sufficient for public static content)
+- **Context propagation** — inherits namespace, environment, stage, name via tf-label
 
 ## Usage
 
-### From GitHub
+### Minimal (static site with defaults)
 
 ```hcl
-module "this" {
-  source = "github.com/PlatformStackPulse/terraform-aws-my-module?ref=v1.0.0"
+module "static_site" {
+  source = "github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws?ref=v1.0.0"
 
-  name        = "my-resource"
-  environment = "dev"
   namespace   = "myorg"
+  environment = "production"
+  name        = "website"
 
-  tags = {
-    Project = "example"
-    Owner   = "platform-engineering"
-  }
+  bucket_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "PublicRead"
+      Effect    = "Allow"
+      Principal = "*"
+      Action    = "s3:GetObject"
+      Resource  = "arn:aws:s3:::myorg-production-website/*"
+    }]
+  })
 }
 ```
 
-### From Terraform Registry
+### Full configuration (CloudFront OAC + notifications)
 
 ```hcl
-module "this" {
-  source  = "PlatformStackPulse/my-module/aws"
-  version = "~> 1.0"
+module "static_site" {
+  source = "github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws?ref=v1.0.0"
 
-  name        = "my-resource"
-  environment = "dev"
   namespace   = "myorg"
+  environment = "production"
+  name        = "website"
 
-  tags = {
-    Project = "example"
-    Owner   = "platform-engineering"
-  }
+  # Website config
+  index_document = "index.html"
+  error_document = "404.html"
+
+  # CORS
+  cors_allowed_origins = ["https://myapp.example.com"]
+  cors_allowed_methods = ["GET", "HEAD"]
+
+  # CloudFront OAC policy
+  bucket_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "CloudFrontOAC"
+      Effect    = "Allow"
+      Principal = { Service = "cloudfront.amazonaws.com" }
+      Action    = "s3:GetObject"
+      Resource  = "arn:aws:s3:::myorg-production-website/*"
+      Condition = {
+        StringEquals = { "AWS:SourceArn" = aws_cloudfront_distribution.this.arn }
+      }
+    }]
+  })
+
+  # Optional: deploy cleanup
+  enable_lifecycle = true
+  lifecycle_rules = [{
+    id              = "cleanup-old-deploys"
+    prefix          = "old/"
+    expiration_days = 30
+  }]
+
+  # Optional: cache invalidation trigger
+  lambda_notifications = [{
+    lambda_function_arn = aws_lambda_function.invalidator.arn
+    events             = ["s3:ObjectCreated:*"]
+    filter_prefix      = "assets/"
+  }]
 }
 ```
 
-## Module Structure
+## Composed Atoms
 
-```
-├── main.tf           # Primary resource definitions
-├── variables.tf      # Input variables
-├── outputs.tf        # Output values
-├── versions.tf       # Terraform and provider version constraints
-├── locals.tf         # Local values and naming conventions
-├── data.tf           # Data sources
-├── examples/         # Usage examples for consumers
-│   └── complete/     # Full-featured example
-├── tests/            # Terraform native tests
-│   ├── unit/         # Unit tests with mock providers
-│   └── integration/  # Integration tests (real AWS)
-├── .github/          # GitHub Actions + templates
-├── scripts/          # Automation scripts
-└── Makefile          # Build automation
-```
-
-## Make Targets
-
-```
-make help              Show all targets
-make init              Initialize the module
-make fmt               Format all Terraform files
-make fmt-check         Check formatting (CI mode)
-make validate          Validate the module
-make lint              Run TFLint
-make test              Run all tests
-make test-unit         Run unit tests only
-make test-integration  Run integration tests
-make security          Run Trivy security scan
-make docs              Generate terraform-docs
-make clean             Remove .terraform dirs
-make all               Run all checks
-make dev-setup         Install development tools
-make hooks             Install pre-commit hooks
-make changelog         Regenerate CHANGELOG.md
-make version           Show current version
-make release           Create version tag (BUMP=patch|minor|major)
-```
-
-## Publishing
-
-### Terraform Registry (Public)
-
-The [Terraform Registry](https://registry.terraform.io) automatically publishes new versions when you create a GitHub Release:
-
-1. **Name your repo** following the convention: `terraform-<PROVIDER>-<NAME>` (e.g., `terraform-aws-vpc`)
-2. **Connect** at [registry.terraform.io/github/create](https://registry.terraform.io/github/create)
-3. **Tag and release** — every semver tag (`v1.0.0`) is auto-published
-
-### Terraform Cloud / Enterprise (Private)
-
-1. Connect your VCS provider in TFC/TFE settings
-2. Create a Module in the private registry pointing to this repo
-3. Semver tags trigger automatic version publication
-
-### JFrog Artifactory
-
-Set these repository variables/secrets in GitHub:
-- `ARTIFACTORY_ENABLED` = `true` (variable)
-- `ARTIFACTORY_URL` — e.g., `https://myorg.jfrog.io/artifactory` (variable)
-- `ARTIFACTORY_REPO` — e.g., `terraform-modules` (variable)
-- `ARTIFACTORY_TOKEN` (secret)
-
-### GitLab Terraform Registry
-
-To publish to GitLab, add a `publish-gitlab` job in `.github/workflows/auto-release.yml` and set:
-- `GITLAB_TOKEN` (secret)
-- `GITLAB_PROJECT_ID` (variable)
+| Atom | Role in Molecule | Default |
+|------|-----------------|---------|
+| [`tf-atom-s3-bucket-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-aws) | Core bucket | Always created |
+| [`tf-atom-s3-bucket-public-access-block-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-public-access-block-aws) | Block public access | All 4 controls = true |
+| [`tf-atom-s3-bucket-encryption-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-encryption-aws) | Encryption at rest | AES256 |
+| [`tf-atom-s3-bucket-website-configuration-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-website-configuration-aws) | Website hosting config | index.html / error.html |
+| [`tf-atom-s3-bucket-cors-configuration-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws) | CORS rules | GET/HEAD from allowed origins |
+| [`tf-atom-s3-bucket-policy-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-policy-aws) | Bucket policy | User-provided (CloudFront/public) |
+| [`tf-atom-s3-bucket-lifecycle-configuration-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-lifecycle-configuration-aws) | Lifecycle rules | Disabled (set rules to enable) |
+| [`tf-atom-s3-bucket-notification-aws`](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-notification-aws) | Event notifications | Disabled (set triggers to enable) |
 
 ## CI/CD Workflows
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | Push (all branches), PR to main, manual | Format, validate, lint, test, security |
-| `auto-release.yml` | CI passes on main | Auto-tag stable release + GitHub Release + artifacts |
-| `preview-release.yml` | CI passes on feature branch | Create pre-release with branch version |
+| `ci.yml` | Push/PR to main, feature branches | Format, validate, lint, test, security |
+| `auto-release.yml` | CI passes on main | Semantic version tag + GitHub Release + artifacts |
+| `preview-release.yml` | CI passes on feature branch | Pre-release tag for testing |
 | `codeql.yml` | Weekly + push main | SAST security analysis |
-| `dependencies.yml` | Weekly | Check for provider updates |
 | `changelog.yml` | Push main | Auto-update CHANGELOG.md |
-| `version-bump.yml` | Manual | Bump patch/minor/major version |
-
-## Git & Release Strategy
-
-This template follows **Trunk-Based Development with Preview Artifacts**.
-
-### Versioning
-
-All versions follow [Semantic Versioning 2.0.0](https://semver.org/):
-
-| Type | Format | Example | Source |
-|------|--------|---------|--------|
-| Stable | `MAJOR.MINOR.PATCH` | `v1.4.0` | main branch |
-| Preview | `MAJOR.MINOR.PATCH-BRANCH.RUN` | `v1.5.0-feat-add-ecs.12` | feature branch |
-
-### Release Flow
-
-```
-Developer creates feature branch (feat/*, fix/*, feature/*)
-        ↓
-Push triggers CI (format, validate, lint, test, security)
-        ↓
-CI passes → Preview Release created (pre-release tag)
-        ↓
-Other branches/environments can consume preview version
-        ↓
-PR merged to main
-        ↓
-CI runs on main → Auto Release creates stable tag + GitHub Release + artifacts
-```
-
-### Consuming Modules
-
-**Stable release (production):**
-```hcl
-module "this" {
-  source = "github.com/ORG/REPO?ref=v1.4.0"
-}
-```
-
-**Preview release (testing/integration):**
-```hcl
-module "this" {
-  source = "github.com/ORG/REPO?ref=v1.5.0-feat-add-ecs.12"
-}
-```
-
-### Version Bump Rules (Conventional Commits)
-
-| Commit prefix | Bump | Example |
-|---------------|------|---------|
-| `feat!:` or `BREAKING CHANGE` | Major | `v1.0.0` → `v2.0.0` |
-| `feat:` | Minor | `v1.4.0` → `v1.5.0` |
-| `fix:`, `docs:`, `chore:`, etc. | Patch | `v1.4.0` → `v1.4.1` |
-
-## Pre-Commit Hooks
-
-Installed via `make hooks`. Runs on every commit:
-
-- `terraform_fmt` — Format check
-- `terraform_validate` — Syntax validation
-- `terraform_tflint` — Linting with AWS rules
-- `terraform_docs` — Auto-generate documentation
-- `terraform_trivy` — Security scanning (HIGH/CRITICAL)
-- `gitlint` — Conventional commit message validation
+| `dependencies.yml` | Weekly | Check for provider updates |
 
 ## Module Documentation
 
@@ -339,25 +246,9 @@ No resources.
 | <a name="output_website_endpoint"></a> [website\_endpoint](#output\_website\_endpoint) | S3 website endpoint URL |
 <!-- END_TF_DOCS -->
 
-## Learning Materials
-
-| Document | Description |
-|----------|-------------|
-| [docs/TERRAFORM_FLAGS.md](docs/TERRAFORM_FLAGS.md) | Terraform CLI flags reference (`-refresh`, `-upgrade`, etc.) |
-| [docs/TFENV.md](docs/TFENV.md) | tfenv version manager guide |
-| [docs/MAKEFILE_ENV.md](docs/MAKEFILE_ENV.md) | Makefile targets and `.env` configuration |
-| [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md) | Step-by-step guide to customise this template |
-| [WORKFLOW.md](WORKFLOW.md) | Branching strategy and CI/CD pipeline |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow and guidelines |
-
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and guidelines.
-
-## Security
-
-See [SECURITY.md](SECURITY.md) for vulnerability reporting.
-
-## License
-
-[MIT](LICENSE)
+1. Create a feature branch from `main`
+2. Run `make fmt && make lint && make docs && make test`
+3. Submit a PR — CI must pass before merge
+4. Squash merge to `main` triggers auto-release
