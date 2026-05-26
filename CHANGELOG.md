@@ -1,6 +1,27 @@
 # Changelog
 
 
+<a name="v1.1.1-fix-readme-structure.7"></a>
+## [v1.1.1-fix-readme-structure.7](https://github.com/PlatformStackPulse/Terraform-module-base-template/compare/v1.1.0...v1.1.1-fix-readme-structure.7) (2026-05-26)
+
+### Documentation
+
+- align README structure with atom pattern ([9652b57](https://github.com/PlatformStackPulse/Terraform-module-base-template/commit/9652b577221af767805454cdc49f516ec054adaf))
+
+
+<a name="v1.1.0"></a>
+## [v1.1.0](https://github.com/PlatformStackPulse/Terraform-module-base-template/compare/v1.0.1-feat-implement-molecule.4...v1.1.0) (2026-05-26)
+
+### Documentation
+
+- **changelog:** update CHANGELOG.md [skip ci] ([b7b4106](https://github.com/PlatformStackPulse/Terraform-module-base-template/commit/b7b41067494f354870e52b9dd265b283314109f3))
+- **changelog:** update CHANGELOG.md [skip ci] ([e4f3fa4](https://github.com/PlatformStackPulse/Terraform-module-base-template/commit/e4f3fa4ea6033245f1db51c5f173475a1365d703))
+
+### Features
+
+- implement S3 static site molecule ([#1](https://github.com/PlatformStackPulse/Terraform-module-base-template/issues/1)) ([ef09002](https://github.com/PlatformStackPulse/Terraform-module-base-template/commit/ef0900285362cf03ee313375313c1e96f92e6885))
+
+
 <a name="v1.0.1-feat-implement-molecule.4"></a>
 ## [v1.0.1-feat-implement-molecule.4](https://github.com/PlatformStackPulse/Terraform-module-base-template/compare/v1.0.0...v1.0.1-feat-implement-molecule.4) (2026-05-26)
 
