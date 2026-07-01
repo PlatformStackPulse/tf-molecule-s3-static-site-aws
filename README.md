@@ -10,6 +10,8 @@
 
 ---
 
+S3 static-website hosting bucket with a security baseline, CORS, website config, and a bucket policy — composed from tested atoms in a single module call.
+
 ## Purpose
 
 An S3 static website hosting molecule that composes multiple atoms to deliver a fully-configured static site bucket. Provides website configuration, CORS rules, encryption, public access block, bucket policy (for CloudFront OAC or public read), and optional lifecycle/notification support — all in a single module call.
@@ -74,7 +76,7 @@ An S3 static website hosting molecule that composes multiple atoms to deliver a 
 
 ```hcl
 module "static_site" {
-  source = "github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws?ref=v1.0.0"
+  source = "git::https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws.git?ref=v1.0.0"
 
   namespace   = "myorg"
   environment = "production"
@@ -97,7 +99,7 @@ module "static_site" {
 
 ```hcl
 module "static_site" {
-  source = "github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws?ref=v1.0.0"
+  source = "git::https://github.com/PlatformStackPulse/tf-molecule-s3-static-site-aws.git?ref=v1.0.0"
 
   namespace   = "myorg"
   environment = "production"
@@ -245,6 +247,34 @@ No resources.
 | <a name="output_website_domain"></a> [website\_domain](#output\_website\_domain) | S3 website domain (for Route53 alias) |
 | <a name="output_website_endpoint"></a> [website\_endpoint](#output\_website\_endpoint) | S3 website endpoint URL |
 <!-- END_TF_DOCS -->
+
+## Tests
+
+Unit tests run against a mock AWS provider (no credentials, no real resources) and
+assert on plan-known values only — the tf-label `id`, the `enabled` flag, and the
+optional-atom counts:
+
+```bash
+# Unit tests (mock provider — safe to run anywhere)
+terraform init -backend=false
+terraform test -test-directory=tests/unit
+# or:
+make test-unit
+```
+
+Coverage in `tests/unit/main_test.tftest.hcl`:
+
+| Run block | What it asserts |
+|-----------|-----------------|
+| `creates_when_enabled` | tf-label `id` is `eg-test-thing`; module enabled; optional atoms off by default |
+| `optional_atoms_toggle_on` | `lifecycle_configuration` + `notification` atoms are created when their flags are set |
+| `disabled_creates_nothing` | `enabled = false` yields a null `bucket_id` and no resources |
+
+Integration tests in `tests/integration/` require real AWS credentials:
+
+```bash
+make test-integration   # terraform test -test-directory=tests/integration
+```
 
 ## Contributing
 
