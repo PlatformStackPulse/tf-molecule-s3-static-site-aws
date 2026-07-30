@@ -192,7 +192,7 @@ No providers.
 | <a name="module_bucket_policy"></a> [bucket\_policy](#module\_bucket\_policy) | git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-policy-aws.git | c534c331a0cfec621b79d40de92710a97290966d |
 | <a name="module_cors_configuration"></a> [cors\_configuration](#module\_cors\_configuration) | git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws.git | 432576880a216f63c6791db2d0f79eae370ac373 |
 | <a name="module_encryption"></a> [encryption](#module\_encryption) | git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-encryption-aws.git | a3f83c3ef6208f44428345c7bcbd9a8a05bd401d |
-| <a name="module_lifecycle_configuration"></a> [lifecycle\_configuration](#module\_lifecycle\_configuration) | git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-lifecycle-configuration-aws.git | 715e6b5fbcb1e4d77056c28b422937c03cb166c1 |
+| <a name="module_lifecycle_configuration"></a> [lifecycle\_configuration](#module\_lifecycle\_configuration) | git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-lifecycle-configuration-aws.git | d9d3e7b730bba4e0b60192a1d20f515102e0d7c4 |
 | <a name="module_notification"></a> [notification](#module\_notification) | git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-notification-aws.git | 9eae1fa230a0e4d15c5c6a2065eb85d9e3473857 |
 | <a name="module_public_access_block"></a> [public\_access\_block](#module\_public\_access\_block) | git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-public-access-block-aws.git | 141d21b8e5af97d018183e11d5e590758aab5d90 |
 | <a name="module_this"></a> [this](#module\_this) | git::https://github.com/PlatformStackPulse/tf-label.git | v1.0.0 |
