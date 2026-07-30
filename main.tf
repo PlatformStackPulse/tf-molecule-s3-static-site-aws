@@ -73,7 +73,7 @@ module "bucket_policy" {
 
 # --- Lifecycle Configuration (optional — cleanup old deploy artifacts) ---
 module "lifecycle_configuration" {
-  source = "git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-lifecycle-configuration-aws.git?ref=715e6b5fbcb1e4d77056c28b422937c03cb166c1"
+  source = "git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-lifecycle-configuration-aws.git?ref=d9d3e7b730bba4e0b60192a1d20f515102e0d7c4" # v1.1.1
   count  = var.enable_lifecycle ? 1 : 0
 
   context         = module.this.context
