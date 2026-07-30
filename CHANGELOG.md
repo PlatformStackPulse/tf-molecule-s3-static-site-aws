@@ -1,6 +1,19 @@
 # Changelog
 
 
+<a name="v1.1.1-fix-lifecycle-atom-bump-v1-1-1.11"></a>
+## [v1.1.1-fix-lifecycle-atom-bump-v1-1-1.11](https://github.com/PlatformStackPulse/Terraform-module-base-template/compare/v1.1.1-fix-readme-structure.7...v1.1.1-fix-lifecycle-atom-bump-v1-1-1.11) (2026-07-30)
+
+### Bug Fixes
+
+- bump lifecycle atom to v1.1.1 (fixes deprecated .id warning) ([44de303](https://github.com/PlatformStackPulse/Terraform-module-base-template/commit/44de3031d92d7f91eb793070673129e7684912fa))
+
+### Documentation
+
+- align README structure with atom pattern ([#2](https://github.com/PlatformStackPulse/Terraform-module-base-template/issues/2)) ([7ffd3a9](https://github.com/PlatformStackPulse/Terraform-module-base-template/commit/7ffd3a9c748d00bdb5111bc82dde9403875c005e))
+- **changelog:** update CHANGELOG.md [skip ci] ([828cf27](https://github.com/PlatformStackPulse/Terraform-module-base-template/commit/828cf273df63087c18df8e8c006980039a066fb0))
+
+
 <a name="v1.1.1-fix-readme-structure.7"></a>
 ## [v1.1.1-fix-readme-structure.7](https://github.com/PlatformStackPulse/Terraform-module-base-template/compare/v1.1.0...v1.1.1-fix-readme-structure.7) (2026-05-26)
 
